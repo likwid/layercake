@@ -26,7 +26,7 @@ variable "key_name" {
 
 variable "domain_name" {
   description = "the internal DNS name to use with services"
-  default     = "${var.environment}.${var.name}.local"
+  default     = "layercake.local"
 }
 
 variable "domain_name_servers" {
