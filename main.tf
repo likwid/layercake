@@ -1,0 +1,66 @@
+/**
+ * The layercake module contains all of the submodules for standing
+ * up a modern cloud infrastructure in Amazon.
+ *
+ * Usage:
+ *
+ *    module "layercake" {
+ *      source      = "github.com/likwid/layercake"
+ *      name        = "layercake-example"
+ *      environment = "sandbox"
+ *    }
+ *
+ */
+
+variable "name" {
+  description = "the name of your infrastructure, e.g. \"layercake-example\""
+}
+
+variable "environment" {
+  description = "the tag for your infrastructure, splitting it into stages e.g. \"prod, staging, sandbox\""
+}
+
+variable "key_name" {
+  description = "the name of the ssh key to use, e.g. \"internal-key\""
+}
+
+variable "domain_name" {
+  description = "the internal DNS name to use with services"
+  default     = "${var.environment}.${var.name}.local"
+}
+
+variable "domain_name_servers" {
+  description = "the internal DNS servers, defaults to the internal route53 server of the VPC"
+  default     = ""
+}
+
+variable "region" {
+  description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
+  default     = "us-east-1"
+}
+
+variable "cidr" {
+  description = "the CIDR block to provision for the VPC, if set to something other than the default, both internal_subnets and external_subnets have to be defined as well"
+  default     = "10.10.0.0/16"
+}
+
+variable "internal_subnets" {
+  description = "a comma-separated list of CIDRs for internal subnets in your VPC, must be set if the cidr variable is defined, needs to have as many elements as there are availability zones"
+  default     = "10.10.0.0/19,10.10.64.0/19,10.10.128.0/19"
+}
+
+variable "external_subnets" {
+  description = "a comma-separated list of CIDRs for external subnets in your VPC, must be set if the cidr variable is defined, needs to have as many elements as there are availability zones"
+  default     = "10.10.32.0/20,10.10.96.0/20,10.10.160.0/20"
+}
+
+variable "availability_zones" {
+  description = "a comma-separated list of availability zones, defaults to all AZ of the region, if set to something other than the defaults, both internal_subnets and external_subnets have to be defined as well"
+  default     = "us-east-1b,us-east-1c,us-east-1d"
+}
+
+module "defaults" {
+  source = "./defaults"
+  region = "${var.region}"
+  cidr   = "${var.cidr}"
+}
