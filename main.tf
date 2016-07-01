@@ -59,10 +59,26 @@ variable "availability_zones" {
   default     = "us-east-1b,us-east-1c,us-east-1d"
 }
 
+variable "bastion_instance_type" {
+  description = "Instance type for the bastion"
+  default     = "t2.micro"
+}
+
+variable "mgmtnode_instance_type" {
+  description = "Instance type for the management node"
+  default     = "t2.micro"
+}
+
 module "defaults" {
   source = "./defaults"
   region = "${var.region}"
   cidr   = "${var.cidr}"
+}
+
+module "iam_roles" {
+  source      = "./iam-roles"
+  name        = "${var.name}"
+  environment = "${var.environment}"
 }
 
 module "vpc" {
@@ -73,4 +89,49 @@ module "vpc" {
   external_subnets   = "${var.external_subnets}"
   availability_zones = "${var.availability_zones}"
   environment        = "${var.environment}"
+}
+
+module "dhcp" {
+  source  = "./dhcp"
+  name    = "${module.dns.name}"
+  vpc_id  = "${module.vpc.id}"
+  servers = "${coalesce(var.domain_name_servers, module.defaults.domain_name_servers)}"
+}
+
+module "dns" {
+  source = "./dns"
+  name   = "${var.domain_name}"
+  vpc_id = "${module.vpc.id}"
+}
+
+module "security_groups" {
+  source      = "./security-groups"
+  name        = "${var.name}"
+  vpc_id      = "${module.vpc.id}"
+  environment = "${var.environment}"
+  cidr        = "${var.cidr}"
+}
+
+module "bastion" {
+  source               = "./bastion"
+  region               = "${var.region}"
+  instance_iam_profile = "${module.iam_roles.describe_profile_name}"
+  instance_type        = "${var.bastion_instance_type}"
+  security_groups      = "${module.security_groups.external_ssh},${module.security_groups.internal_ssh}"
+  vpc_id               = "${module.vpc.id}"
+  subnet_id            = "${element(split(",",module.vpc.external_subnets), 0)}"
+  key_name             = "${var.key_name}"
+  environment          = "${var.environment}"
+}
+
+module "mgmtnode" {
+  source               = "../layercake/mgmtnode"
+  region               = "${var.region}"
+  instance_iam_profile = "${module.iam_roles.management_node_profile_name}"
+  instance_type        = "${var.mgmtnode_instance_type}"
+  security_groups      = "${module.security_groups.internal_ssh}"
+  vpc_id               = "${module.vpc.id}"
+  subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
+  key_name             = "${var.key_name}"
+  environment          = "${var.environment}"
 }

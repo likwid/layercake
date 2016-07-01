@@ -19,8 +19,8 @@ variable "availability_zones" {
 }
 
 variable "name" {
-  description = "Name tag, e.g stack"
-  default     = "stack"
+  description = "Name tag, e.g layercake"
+  default     = "layercake"
 }
 
 /**
