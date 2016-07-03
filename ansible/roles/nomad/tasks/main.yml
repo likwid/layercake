@@ -46,7 +46,7 @@
       group: root
       state: touch
 
-  - name: Disable nomad service for clients
+  - name: Disable nomad service
     service:
       name: nomad
       enabled: no
