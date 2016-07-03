@@ -6,5 +6,5 @@
   - docker
   - aws-docker-disk
   - consul
-  # - nomad
+  - nomad
 
