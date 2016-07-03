@@ -4,8 +4,8 @@
  *
  * Usage:
  *
- *    module "mgmtnode" {
- *      source               = "github.com/likwid/layercake/mgmtnode"
+ *    module "consul_servers" {
+ *      source               = "github.com/likwid/layercake/consul-servers"
  *      region               = "us-west-2"
  *      instance_iam_profile = ""
  *      instance_type        = "t2.micro"
@@ -14,6 +14,8 @@
  *      key_name             = "ssh-key"
  *      subnet_id            = "pub-1"
  *      environment          = "prod"
+ *      launch_ami           = "ami-123456"
+ *      consul_server_count  = 3
  *    }
  *
  */
@@ -51,6 +53,11 @@ variable "instance_iam_profile" {
   description = "Instance IAM profile"
 }
 
+variable "consul_server_count" {
+  description = "Number of consul servers to launch"
+  default = 3
+}
+
 variable "launch_ami" {
   description = "AMI to launch node with"
 }
@@ -63,10 +70,17 @@ variable "internal_dns_name" {
   description = "DNS name, like layercake.local"
 }
 
-resource "aws_security_group" "mgmt_node" {
-  name        = "management-node-sg"
+resource "aws_security_group" "consul_servers" {
+  name        = "consul-server-sg"
   vpc_id      = "${var.vpc_id}"
-  description = "Allows traffic from and to the management node"
+  description = "Allows traffic for consul communication"
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = -1
+    self      = true
+  }
 
   ingress {
     from_port       = 0
@@ -91,29 +105,28 @@ resource "aws_security_group" "mgmt_node" {
   }
 }
 
-resource "aws_instance" "mgmtnode" {
+resource "aws_instance" "consul_server" {
   ami                    = "${var.launch_ami}"
+  count                  = "${var.consul_server_count}"
   source_dest_check      = false
   iam_instance_profile   = "${var.instance_iam_profile.name}"
   instance_type          = "${var.instance_type}"
   subnet_id              = "${var.subnet_id}"
   key_name               = "${var.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.mgmt_node.id}"]
+  vpc_security_group_ids = ["${aws_security_group.consul_servers.id}"]
   monitoring             = false
   tags {
-    Name        = "management"
+    Name        = "consul-server-${count.index+1}"
+    Role        = "consul-server"
     Environment = "${var.environment}"
   }
 }
 
-resource "aws_route53_record" "management" {
+resource "aws_route53_record" "consul" {
+  count   = "${var.consul_server_count}"
   zone_id = "${var.internal_dns_zone_id}"
-  name    = "management.${var.internal_dns_name}"
+  name    = "consul${count.index+1}.${var.internal_dns_name}"
   type    = "A"
   ttl     = 60
-  records = ["${aws_instance.mgmtnode.private_ip}"]
-}
-
-output "mgmt_security_group" {
-  value = "${aws_security_group.mgmt_node.id}"
+  records = ["${element(aws_instance.consul_server.*.private_ip, count.index)}"]
 }

@@ -66,7 +66,16 @@ variable "bastion_instance_type" {
 
 variable "mgmtnode_instance_type" {
   description = "Instance type for the management node"
-  default     = "t2.micro"
+  default     = "m4.large"
+}
+
+variable "consul_server_instance_type" {
+  description = "Instance type for the consul servers"
+  default     = "m4.large"
+}
+
+variable "docker_host_ami" {
+  description = "The ami for launching docker hosts"
 }
 
 module "defaults" {
@@ -125,8 +134,9 @@ module "bastion" {
 }
 
 module "mgmtnode" {
-  source               = "../layercake/mgmtnode"
+  source               = "./mgmtnode"
   region               = "${var.region}"
+  launch_ami           = "${var.docker_host_ami}"
   instance_iam_profile = "${module.iam_roles.management_node_profile_name}"
   instance_type        = "${var.mgmtnode_instance_type}"
   security_groups      = "${module.security_groups.internal_ssh}"
@@ -134,4 +144,22 @@ module "mgmtnode" {
   subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
   key_name             = "${var.key_name}"
   environment          = "${var.environment}"
+  internal_dns_zone_id = "${module.dns.zone_id}"
+  internal_dns_name    = "${module.dns.name}"
 }
+
+module "consul_servers" {
+  source               = "./consul-servers"
+  region               = "${var.region}"
+  launch_ami           = "${var.docker_host_ami}"
+  instance_iam_profile = "${module.iam_roles.docker_host_profile_name}"
+  instance_type        = "${var.consul_server_instance_type}"
+  security_groups      = "${module.mgmtnode.mgmt_security_group}"
+  vpc_id               = "${module.vpc.id}"
+  subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
+  key_name             = "${var.key_name}"
+  environment          = "${var.environment}"
+  internal_dns_zone_id = "${module.dns.zone_id}"
+  internal_dns_name    = "${module.dns.name}"
+}
+
