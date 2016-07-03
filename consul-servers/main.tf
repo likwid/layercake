@@ -6,16 +6,17 @@
  *
  *    module "consul_servers" {
  *      source               = "github.com/likwid/layercake/consul-servers"
- *      region               = "us-west-2"
- *      instance_iam_profile = ""
  *      instance_type        = "t2.micro"
+ *      region               = "us-west-2"
  *      security_groups      = "sg-1,sg-2"
  *      vpc_id               = "vpc-12"
+ *      vpc_cidr             = "10.30.0.0/16"
  *      key_name             = "ssh-key"
- *      subnet_id            = "pub-1"
+ *      availability_zones   = "az-1,az-2"
+ *      subnet_ids           = "subnet-1,subnet-2,subnet-3"
+ *      instance_iam_profile = ""
  *      environment          = "prod"
  *      launch_ami           = "ami-123456"
- *      consul_server_count  = 3
  *    }
  *
  */
@@ -37,12 +38,20 @@ variable "vpc_id" {
   description = "VPC ID"
 }
 
+variable "vpc_cidr" {
+  description = "VPC cidr"
+}
+
 variable "key_name" {
   description = "The SSH key pair, key name"
 }
 
-variable "subnet_id" {
-  description = "A external subnet id"
+variable "availability_zones" {
+  description = "Comma separated list of AZs"
+}
+
+variable "subnet_ids" {
+  description = "Comma separated list of subnet IDs"
 }
 
 variable "environment" {
@@ -53,21 +62,23 @@ variable "instance_iam_profile" {
   description = "Instance IAM profile"
 }
 
-variable "consul_server_count" {
-  description = "Number of consul servers to launch"
-  default = 3
-}
-
 variable "launch_ami" {
   description = "AMI to launch node with"
 }
 
-variable "internal_dns_zone_id" {
-  description = "DNS zone to use"
+variable "min_size" {
+  description = "Minimum instance count"
+  default     = 3
 }
 
-variable "internal_dns_name" {
-  description = "DNS name, like layercake.local"
+variable "max_size" {
+  description = "Maxmimum instance count"
+  default     = 100
+}
+
+variable "desired_capacity" {
+  description = "Desired instance count"
+  default     = 3
 }
 
 resource "aws_security_group" "consul_servers" {
@@ -105,28 +116,71 @@ resource "aws_security_group" "consul_servers" {
   }
 }
 
-resource "aws_instance" "consul_server" {
-  ami                    = "${var.launch_ami}"
-  count                  = "${var.consul_server_count}"
-  source_dest_check      = false
-  iam_instance_profile   = "${var.instance_iam_profile.name}"
-  instance_type          = "${var.instance_type}"
-  subnet_id              = "${var.subnet_id}"
-  key_name               = "${var.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.consul_servers.id}"]
-  monitoring             = false
+#TODO: Maybe don't allow this long term, but useful for debugging
+resource "aws_security_group" "consul_ui" {
+  name        = "consul-ui-sg"
+  vpc_id      = "${var.vpc_id}"
+  description = "Allows any node to talk to consul ui"
+
+  ingress {
+    from_port   = 8500
+    to_port     = 8500
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags {
-    Name        = "consul-server-${count.index+1}"
-    Role        = "consul-server"
     Environment = "${var.environment}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-resource "aws_route53_record" "consul" {
-  count   = "${var.consul_server_count}"
-  zone_id = "${var.internal_dns_zone_id}"
-  name    = "consul${count.index+1}.${var.internal_dns_name}"
-  type    = "A"
-  ttl     = 60
-  records = ["${element(aws_instance.consul_server.*.private_ip, count.index)}"]
+resource "aws_launch_configuration" "consul" {
+  name_prefix          = "consul-"
+  image_id             = "${var.launch_ami}"
+  instance_type        = "${var.instance_type}"
+  iam_instance_profile = "${var.instance_iam_profile.name}"
+  key_name             = "${var.key_name}"
+  security_groups      = ["${aws_security_group.consul_servers.id}", "${aws_security_group.consul_ui.id}"]
+  
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "consul" {
+  name = "consul"
+  availability_zones   = ["${split(",", var.availability_zones)}"]
+  vpc_zone_identifier  = ["${split(",", var.subnet_ids)}"]
+  launch_configuration = "${aws_launch_configuration.consul.id}"
+  min_size             = "${var.min_size}"
+  max_size             = "${var.max_size}"
+  desired_capacity     = "${var.desired_capacity}"
+  termination_policies = ["OldestLaunchConfiguration", "Default"]
+
+  tag {
+    key                 = "Name"
+    value               = "consul"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "Role"
+    value               = "consul-server"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "Environment"
+    value               = "${var.environment}"
+    propagate_at_launch = true
+  }
 }

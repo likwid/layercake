@@ -7,8 +7,8 @@ variables:
   instance_type: "m4.large"
   ami_id: "ami-fce3c696"
   ami_name_pattern: "basebox"
-  vpc_id: "vpc-57153a33" 
-  subnet_id: "subnet-f3aac0ce"
+  vpc_id: "{{env `VPC_ID`}}" 
+  subnet_id: "{{env `SUBNET_ID`}}"
 
 builders:
 - type: "amazon-ebs"

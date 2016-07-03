@@ -6,7 +6,7 @@
  *
  *    module "layercake" {
  *      source      = "github.com/likwid/layercake"
- *      name        = "layercake-example"
+ *      name        = "example"
  *      environment = "sandbox"
  *    }
  *
@@ -26,7 +26,7 @@ variable "key_name" {
 
 variable "domain_name" {
   description = "the internal DNS name to use with services"
-  default     = "layercake.local"
+  default     = "lc.io"
 }
 
 variable "domain_name_servers" {
@@ -156,10 +156,10 @@ module "consul_servers" {
   instance_type        = "${var.consul_server_instance_type}"
   security_groups      = "${module.mgmtnode.mgmt_security_group}"
   vpc_id               = "${module.vpc.id}"
-  subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
+  availability_zones   = "${module.vpc.availability_zones}"
+  subnet_ids           = "${module.vpc.internal_subnets}"
   key_name             = "${var.key_name}"
   environment          = "${var.environment}"
-  internal_dns_zone_id = "${module.dns.zone_id}"
-  internal_dns_name    = "${module.dns.name}"
+  vpc_cidr             = "${var.cidr}"
 }
 
