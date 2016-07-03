@@ -73,7 +73,7 @@ variable "min_size" {
 
 variable "max_size" {
   description = "Maxmimum instance count"
-  default     = 100
+  default     = 9
 }
 
 variable "desired_capacity" {
