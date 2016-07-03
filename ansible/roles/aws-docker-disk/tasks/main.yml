@@ -1,0 +1,48 @@
+---
+- name: Check for docker devmapper volume
+  stat:
+    path: /dev/mapper/docker-thinpool-tpool
+  register: docker_volume
+
+- block:
+  - name: Install lvm2
+    apt:
+      name: lvm2
+
+  - name: Create logical volume group
+    lvg:
+      vg: docker
+      pvs: /dev/xvdl
+
+  - name: Create thinpool logical volumes
+    lvol:
+      vg: docker
+      lv: "{{ item.name }}"
+      size: "{{ item.size }}"
+    with_items:
+    - name: thinpool
+      size: 95%VG
+    - name: thinpoolmeta
+      size: 1%VG
+
+  - name: Convert lv
+    command: lvconvert -y --zero n -c 512K --thinpool docker/thinpool --poolmetadata docker/thinpoolmeta
+
+  - name: Change thin pool settings
+    lineinfile:
+      dest: /etc/lvm/lvm.conf
+      regexp: "thin_pool_autoextend_threshold = 100"
+      line: "thin_pool_autoextend_threshold = 80"
+
+  - name: Ensure docker service is stopped
+    service:
+      name: docker
+      state: stopped
+
+  - name: Remove docker directory for device mapper
+    file:
+      path: /var/lib/docker
+      state: absent
+
+  become: yes
+  when: not docker_volume.stat.exists

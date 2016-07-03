@@ -1,0 +1,9 @@
+---
+- name: Add sysctl settings
+  copy:
+    src: 10-layercake.conf
+    dest: /etc/sysctl.d/10-layercake.conf
+    mode: 0644
+    owner: root
+    group: root
+  become: yes

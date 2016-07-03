@@ -1,0 +1,7 @@
+---
+user_for_role: "{{ ansible_user | default(ansible_ssh_user) | default(ansible_user_id) }}"
+docker_engine_version: 1.11.1
+dist_release: "{{ ansible_distribution | lower }}-{{ ansible_distribution_release }}"
+docker_insecure_registry: "localhost:5000"
+docker_use_devmapper: yes
+docker_use_overlay: no

@@ -1,0 +1,13 @@
+log_level = "DEBUG"
+bind_addr = "0.0.0.0"
+data_dir = "/var/nomad"
+datacenter = "prod"
+region = "us"
+advertise {
+  rpc = "{{ ansible_eth0.ipv4.address }}:4647"
+}
+server {
+    enabled = true
+    bootstrap_expect = {{ bootstrap_count }}
+    retry_join = [{% for node in groups['tag_Role_nomad_server'] | difference(inventory_hostname) %}"{{ hostvars[node]['ansible_eth0']['ipv4']['address'] }}:4648"{% if not loop.last %},{% endif %}{% endfor %}]
+}

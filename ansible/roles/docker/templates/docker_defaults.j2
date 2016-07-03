@@ -1,0 +1,10 @@
+DOCKER_OPTS="$DOCKER_OPTS --bip 172.17.42.1/16 -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
+DOCKER_OPTS="$DOCKER_OPTS --insecure-registry=localhost:5000 --insecure-registry=registry"
+DOCKER_OPTS="$DOCKER_OPTS --log-opt max-file=2 --log-opt max-size=50m --exec-opt native.cgroupdriver=cgroupfs"
+{% if docker_use_devmapper -%}
+DOCKER_OPTS="$DOCKER_OPTS --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool-tpool"
+{%- endif %}
+{% if docker_use_overlay -%}
+DOCKER_OPTS="$DOCKER_OPTS --storage-driver overlay"
+{%- endif %}
+

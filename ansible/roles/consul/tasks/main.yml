@@ -1,0 +1,65 @@
+---
+- block:
+
+  - name: Unpack Consul
+    unarchive:
+      copy: no
+      src: "{{ consul_url }}"
+      dest: /usr/local/bin
+      creates: /usr/local/bin/consul
+
+  - name: Ensure Consul group exists
+    group:
+      name: consul
+
+  - name: Ensure Consul user exists
+    user:
+      name: consul
+      group: consul
+      system: yes
+
+  - name: Ensure Consul is executable
+    file:
+      path: /usr/local/bin/consul
+      mode: 0755
+      owner: root
+      group: root
+
+  - name: Ensure Consul configuration directory exists
+    file:
+      path: /etc/consul.d
+      mode: 0755
+      owner: consul
+      group: consul
+      state: directory
+
+  - name: Ensure Consul data directory exists
+    file:
+      path: /var/consul
+      mode: 0755
+      owner: consul
+      group: consul
+      state: directory
+
+  - name: Add Consul upstart file
+    template:
+      src: consul.conf.j2
+      dest: /etc/init/consul.conf
+      mode: 0644
+      owner: root
+      group: root
+
+  - name: Add Consul log file
+    file:
+      path: /var/log/consul.log
+      mode: 0744
+      owner: consul
+      group: consul
+      state: touch
+
+  - name: Disable consul service
+    service:
+      name: consul
+      enabled: no
+
+  become: yes

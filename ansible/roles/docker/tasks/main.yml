@@ -1,0 +1,37 @@
+---
+- block:
+
+  - name: Add Docker repository key
+    apt_key:
+      id: 58118E89F3A912897C070ADBF76221572C52609D 
+      keyserver: hkp://p80.pool.sks-keyservers.net:80
+      state: present
+
+  - name: Add docker repository
+    apt_repository:
+      repo: deb https://apt.dockerproject.org/repo {{ dist_release }} main
+      update_cache: yes
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: Install kernel updates
+    apt:
+      name: linux-image-extra-{{ ansible_kernel }}
+
+  - name: Install docker
+    apt:
+      name: docker-engine
+
+  - name: Template /etc/default/docker
+    template:
+      src: docker_defaults.j2
+      dest: /etc/default/docker
+      mode: 0644
+      owner: root
+      group: root
+
+  - name: Add ssh user to docker group
+    user:
+      name: "{{ user_for_role }}"
+      groups: docker
+
+  become: yes

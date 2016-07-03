@@ -1,0 +1,10 @@
+---
+- hosts: all
+  gather_facts: yes
+  roles:
+  - sysctl-settings
+  - docker
+  - aws-docker-disk
+  - consul
+  # - nomad
+

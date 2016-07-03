@@ -1,0 +1,55 @@
+---
+- block:
+  - name: Unpack Nomad
+    unarchive:
+      copy: no
+      src: "{{ nomad_url }}"
+      dest: /usr/local/bin
+      creates: /usr/local/bin/nomad
+
+  - name: Ensure Nomad is executable
+    file:
+      path: /usr/local/bin/nomad
+      mode: 0755
+      owner: root
+      group: root
+
+  - name: Ensure Nomad configuration directory exists
+    file:
+      path: /etc/nomad.d
+      mode: 0755
+      owner: root
+      group: root
+      state: directory
+
+  - name: Ensure Nomad data directory exists
+    file:
+      path: /var/nomad
+      mode: 0755
+      owner: root
+      group: root
+      state: directory
+
+  - name: Add Nomad upstart file
+    template:
+      src: nomad.conf.j2
+      dest: /etc/init/nomad.conf
+      mode: 0644
+      owner: root
+      group: root
+
+  - name: Add Nomad log file
+    file:
+      path: /var/log/nomad.log
+      mode: 0744
+      owner: root
+      group: root
+      state: touch
+
+  - name: Disable nomad service for clients
+    service:
+      name: nomad
+      enabled: no
+      state: stopped
+
+  become: yes

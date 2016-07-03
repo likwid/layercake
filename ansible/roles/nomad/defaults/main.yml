@@ -1,0 +1,5 @@
+---
+nomad_version: 0.3.0
+nomad_url: https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_linux_amd64.zip
+nomad_file: nomad_{{ nomad_version }}_linux_amd64.zip
+bootstrap_count: 3

@@ -1,0 +1,4 @@
+---
+consul_version: 0.6.4
+consul_url: https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip
+bootstrap_count: 3
