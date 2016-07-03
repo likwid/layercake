@@ -4,7 +4,9 @@
 
 # Getting started
 
-### AMI baking
+### Baking
+
+AMI Baking assumes you have an existing vpc, subnet that you can spin up a Packer Builder instance. This can be a default vpc, and public subnet.
 
 ```
 # VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
@@ -34,10 +36,13 @@ provider "aws" {
 
 Inside directory where main.tf resides:
 ```
+# terraform get
 # terraform plan
 # terraform apply
 # terraform output -module="layercake.bastion"
 ```
+
+Note: If you experience errors while executing terraform apply, just apply again, it is idempotent.
 
 ### Provisioning
 
@@ -46,7 +51,7 @@ Inside directory where main.tf resides:
 # ssh management.lc.io -oForwardAgent=yes
 # git clone git@github.com:likwid/layercake
 # cd layercake/ansible
-# ansible-playbook playbooks/consul-servers/playbook.yml
-# ansible-playbook playbooks/nomad-servers/playbook.yml
+# ansible-playbook playbooks/nomad-consul-servers/playbook.yml
+# ansible-playbook playbooks/nomad-consul-agents/playbook.yml
 ```
 

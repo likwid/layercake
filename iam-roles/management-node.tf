@@ -10,7 +10,8 @@ resource "aws_iam_policy" "management_node" {
         "ec2:*",
         "s3:*",
         "rds:*",
-        "elasticache:*"
+        "elasticache:*",
+        "route53:*"
       ],
       "Resource": "*"
     }

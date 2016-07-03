@@ -102,6 +102,7 @@ resource "aws_instance" "mgmtnode" {
   monitoring             = false
   tags {
     Name        = "management"
+    Role        = "management"
     Environment = "${var.environment}"
   }
 }

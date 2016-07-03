@@ -1,0 +1,23 @@
+---
+- name: Gather ec2 facts
+  ec2_facts:
+
+- block:
+
+  - name: Add Consul client configuration file
+    template:
+      src: client.json.j2
+      dest: /etc/consul.d/client.json
+      mode: 0644
+      owner: consul
+      group: consul
+    notify:
+    - reload consul
+
+  - name: Enable Consul service
+    service:
+      name: consul
+      enabled: yes
+      state: started
+  
+  become: yes

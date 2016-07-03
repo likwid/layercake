@@ -1,6 +1,0 @@
----
-# This is a hack for now, we should create nomad machines
-- hosts: tag_Role_consul_server
-  gather_facts: yes
-  roles:
-  - nomad-server

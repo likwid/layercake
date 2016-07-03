@@ -1,0 +1,11 @@
+log_level = "INFO"
+bind_addr = "0.0.0.0"
+data_dir = "/var/nomad"
+datacenter = "prod"
+region = "{{ ansible_ec2_placement_region }}" 
+leave_on_terminate = false
+leave_on_interrupt = false
+client {
+  enabled = true
+  servers = ["consul1.lc.io", "consul2.lc.io", "consul3.lc.io"]
+}
