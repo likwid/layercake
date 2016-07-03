@@ -1,0 +1,5 @@
+---
+- hosts: tag_Role_consul_server
+  gather_facts: yes
+  roles:
+  - consul-server

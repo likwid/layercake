@@ -13,5 +13,5 @@
   },
   "advertise_addr": "{{ ansible_eth0.ipv4.address }}",
   "client_addr": "{{ ansible_eth0.ipv4.address }}",
-  "retry_join": [{% for node in groups['tag_Role_consul_server'] | difference(inventory_hostname)%}"{{ hostvars[node]['ansible_eth0']['ipv4']['address'] }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  "retry_join": [{% for node in groups['tag_Role_consul_server'] | difference(inventory_hostname)%}"{{ hostvars[node].ansible_eth0.ipv4.address }}"{% if not loop.last %},{% endif %}{% endfor %}]
 }
