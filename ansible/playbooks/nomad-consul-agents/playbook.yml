@@ -2,4 +2,5 @@
 - hosts: "tag_Role_management:tag_Role_resource"
   gather_facts: yes
   roles:
-  - nomad-consul-agents
+  - consul-agent
+  - nomad-agent
