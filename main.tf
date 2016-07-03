@@ -64,13 +64,8 @@ variable "bastion_instance_type" {
   default     = "t2.micro"
 }
 
-variable "mgmtnode_instance_type" {
+variable "instance_type" {
   description = "Instance type for the management node"
-  default     = "m4.large"
-}
-
-variable "consul_server_instance_type" {
-  description = "Instance type for the consul servers"
   default     = "m4.large"
 }
 
@@ -138,7 +133,7 @@ module "mgmtnode" {
   region               = "${var.region}"
   launch_ami           = "${var.docker_host_ami}"
   instance_iam_profile = "${module.iam_roles.management_node_profile_name}"
-  instance_type        = "${var.mgmtnode_instance_type}"
+  instance_type        = "${var.instance_type}"
   security_groups      = "${module.security_groups.internal_ssh}"
   vpc_id               = "${module.vpc.id}"
   subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
@@ -153,7 +148,7 @@ module "consul_servers" {
   region               = "${var.region}"
   launch_ami           = "${var.docker_host_ami}"
   instance_iam_profile = "${module.iam_roles.docker_host_profile_name}"
-  instance_type        = "${var.consul_server_instance_type}"
+  instance_type        = "${var.instance_type}"
   security_groups      = "${module.mgmtnode.mgmt_security_group}"
   vpc_id               = "${module.vpc.id}"
   availability_zones   = "${module.vpc.availability_zones}"
@@ -161,5 +156,22 @@ module "consul_servers" {
   key_name             = "${var.key_name}"
   environment          = "${var.environment}"
   vpc_cidr             = "${var.cidr}"
+}
+
+module "nomad_resource_nodes" {
+  source               = "./nomad-resource-nodes"
+  name                 = "${var.name}"
+  instance_type        = "${var.instance_type}"
+  region               = "${var.region}"
+  security_groups      = "${module.security_groups.internal_ssh}"
+  vpc_id               = "${module.vpc.id}"
+  vpc_cidr             = "${var.cidr}"
+  key_name             = "${var.key_name}"
+  availability_zones   = "${module.vpc.availability_zones}"
+  subnet_ids           = "${module.vpc.internal_subnets}"
+  elb_subnet_ids       = "${module.vpc.external_subnets}"
+  environment          = "${var.environment}"
+  instance_iam_profile = "${module.iam_roles.docker_host_profile_name}"
+  launch_ami           = "${var.docker_host_ami}"
 }
 
