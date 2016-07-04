@@ -1,6 +1,15 @@
 ---
 - hosts: "tag_Role_management:tag_Role_resource"
   gather_facts: yes
+  pre_tasks:
+  - name: Debug
+    debug:
+      msg: "{{ item.key }}: {{ item.val }}"
+    with_items:
+    - key: ec2_private_ip_address
+      val: "{{ ec2_private_ip_address }}"
+    - key: hostvars
+      val: "{{ hostvars[inventory_hostname] }}"
   roles:
   - consul-agent
   - nomad-agent
