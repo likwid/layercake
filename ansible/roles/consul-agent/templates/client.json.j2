@@ -11,6 +11,6 @@
     "https": "0.0.0.0"
   },
   "advertise_addr": "{{ hostvars[inventory_hostname].ansible_eth0.ipv4.address }}",
-  "client_addr": "{{ hostvars[inventory_hostname].ansible_eth1.ipv4.address }}",
+  "client_addr": "{{ hostvars[inventory_hostname].ansible_eth0.ipv4.address }}",
   "retry_join": [{% for node in groups['tag_Role_consul_server'] %}"{{ hostvars[node].ansible_eth0.ipv4.address }}"{% if not loop.last %},{% endif %}{% endfor %}]
 }

@@ -5,7 +5,7 @@
   - name: Gather hostvars for cluster managers
     ec2_facts:
 
-- hosts: tag_Name_management
+- hosts: tag_Role_management,tag_Role_resource
   gather_facts: yes
   roles:
   - consul-agent
