@@ -4,19 +4,3 @@
   roles:
   - consul-server
   - nomad-server
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-  - name: Add Consul DNS entries
-    route53:
-      command: create
-      zone: lc.io
-      record: "{{ 'consul%d.lc.io' | format(item.0 + 1) }}"
-      type: A
-      private_zone: yes
-      ttl: 60
-      value: "{{ hostvars[item.1].ec2_private_ip_address }}"
-      wait: yes
-    with_indexed_items: "{{ groups['tag_Role_consul_server'] }}"

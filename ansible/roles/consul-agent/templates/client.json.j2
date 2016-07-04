@@ -12,5 +12,5 @@
   },
   "advertise_addr": "{{ ansible_eth0.ipv4.address }}",
   "client_addr": "{{ ansible_eth0.ipv4.address }}",
-  "retry_join": ["consul1.lc.io", "consul2.lc.io", "consul3.lc.io"]
+  "retry_join": [{% for node in groups['tag_Role_consul_server'] %}"{{ hostvars[node].ansible_eth0.ipv4.address }}"{% if not loop.last %},{% endif %}{% endfor %}]
 }

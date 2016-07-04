@@ -7,5 +7,5 @@ leave_on_terminate = false
 leave_on_interrupt = false
 client {
   enabled = true
-  servers = ["consul1.lc.io", "consul2.lc.io", "consul3.lc.io"]
+  servers = [{% for node in groups['tag_Role_consul_server'] %}"{{ hostvars[node].ansible_eth0.ipv4.address }}"{% if not loop.last %},{% endif %}{% endfor %}]
 }
