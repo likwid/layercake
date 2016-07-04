@@ -27,15 +27,15 @@ Write the following to a file named main.tf in a directory:
 ```
 variable "region" {
     description = "Where to create the AWS resources"
-        default     = "us-east-1"
+    default     = "us-east-1"
 }
 
 module "layercake" {
     source      = "github.com/likwid/layercake"
-        name        = "layercake-example"
-          environment = "sandbox"
-            region      = "${var.region}"
-              key_name    = "sumnurv"
+    name        = "layercake-example"
+    environment = "sandbox"
+    region      = "${var.region}"
+    key_name    = "sumnurv"
 }
 
 provider "aws" {
