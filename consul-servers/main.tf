@@ -5,18 +5,20 @@
  * Usage:
  *
  *    module "consul_servers" {
- *      source               = "github.com/likwid/layercake/consul-servers"
- *      instance_type        = "t2.micro"
- *      region               = "us-west-2"
- *      security_groups      = "sg-1,sg-2"
- *      vpc_id               = "vpc-12"
- *      vpc_cidr             = "10.30.0.0/16"
- *      key_name             = "ssh-key"
- *      availability_zones   = "az-1,az-2"
- *      subnet_ids           = "subnet-1,subnet-2,subnet-3"
- *      instance_iam_profile = ""
- *      environment          = "prod"
- *      launch_ami           = "ami-123456"
+ *      source                 = "github.com/likwid/layercake/consul-servers"
+ *      instance_type          = "t2.micro"
+ *      region                 = "us-west-2"
+ *      security_groups        = "sg-1,sg-2"
+ *      vpc_id                 = "vpc-12"
+ *      vpc_cidr               = "10.30.0.0/16"
+ *      key_name               = "ssh-key"
+ *      availability_zones     = "az-1,az-2"
+ *      subnet_ids             = "subnet-1,subnet-2,subnet-3"
+ *      instance_iam_profile   = ""
+ *      environment            = "prod"
+ *      mgmt_security_group    = "mgmt"
+ *      cluster_security_group = "cluster"
+ *      launch_ami             = "ami-123456"
  *    }
  *
  */
@@ -62,6 +64,14 @@ variable "instance_iam_profile" {
   description = "Instance IAM profile"
 }
 
+variable "mgmt_security_group" {
+  description = "Allows management node traffic"
+}
+
+variable "cluster_security_group" {
+  description = "Allows cluster members to talk"
+}
+
 variable "launch_ami" {
   description = "AMI to launch node with"
 }
@@ -81,77 +91,13 @@ variable "desired_capacity" {
   default     = 3
 }
 
-resource "aws_security_group" "consul_servers" {
-  name        = "consul-server-sg"
-  vpc_id      = "${var.vpc_id}"
-  description = "Allows traffic for consul communication"
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = -1
-    self      = true
-  }
-
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = -1
-    security_groups = ["${split(",", var.security_groups)}"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Environment = "${var.environment}"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-#TODO: Maybe don't allow this long term, but useful for debugging
-resource "aws_security_group" "consul_ui" {
-  name        = "consul-ui-sg"
-  vpc_id      = "${var.vpc_id}"
-  description = "Allows any node to talk to consul ui"
-
-  ingress {
-    from_port   = 8500
-    to_port     = 8500
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr}"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Environment = "${var.environment}"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 resource "aws_launch_configuration" "consul" {
   name_prefix          = "consul-"
   image_id             = "${var.launch_ami}"
   instance_type        = "${var.instance_type}"
   iam_instance_profile = "${var.instance_iam_profile.name}"
   key_name             = "${var.key_name}"
-  security_groups      = ["${aws_security_group.consul_servers.id}", "${aws_security_group.consul_ui.id}"]
+  security_groups      = ["${var.mgmt_security_group}", "${var.cluster_security_group}"]
   
   lifecycle {
     create_before_destroy = true

@@ -12,7 +12,10 @@ resource "aws_iam_policy" "docker_host" {
         "s3:List*"
       ],
       "Effect": "Allow",
-      "Resource": "*"
+      "Resource": [
+        "${var.docker_registry_arn}",
+        "${var.docker_registry_arn}/*"
+      ]
     }
   ]
 }

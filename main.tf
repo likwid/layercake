@@ -73,16 +73,28 @@ variable "docker_host_ami" {
   description = "The ami for launching docker hosts"
 }
 
+variable "resource_node_security_groups" {
+  description = "Allows ingress traffic to resource cluster, defaults to allow traffic from mgmtnode and external elb"
+  default     = ""
+}
+
 module "defaults" {
   source = "./defaults"
   region = "${var.region}"
   cidr   = "${var.cidr}"
 }
 
-module "iam_roles" {
-  source      = "./iam-roles"
+module "docker_registry_s3" {
+  source      = "./docker-registry-s3"
   name        = "${var.name}"
   environment = "${var.environment}"
+}
+
+module "iam_roles" {
+  source              = "./iam-roles"
+  name                = "${var.name}"
+  environment         = "${var.environment}"
+  docker_registry_arn = "${module.docker_registry_s3.arn}"
 }
 
 module "vpc" {
@@ -118,23 +130,23 @@ module "security_groups" {
 
 module "bastion" {
   source               = "./bastion"
-  region               = "${var.region}"
-  instance_iam_profile = "${module.iam_roles.describe_profile_name}"
   instance_type        = "${var.bastion_instance_type}"
+  region               = "${var.region}"
   security_groups      = "${module.security_groups.external_ssh},${module.security_groups.internal_ssh}"
   vpc_id               = "${module.vpc.id}"
-  subnet_id            = "${element(split(",",module.vpc.external_subnets), 0)}"
   key_name             = "${var.key_name}"
+  subnet_id            = "${element(split(",",module.vpc.external_subnets), 0)}"
   environment          = "${var.environment}"
+  instance_iam_profile = "${module.iam_roles.describe_profile_name}"
 }
 
 module "mgmtnode" {
   source               = "./mgmtnode"
+  instance_type        = "${var.instance_type}"
   region               = "${var.region}"
   launch_ami           = "${var.docker_host_ami}"
   instance_iam_profile = "${module.iam_roles.management_node_profile_name}"
-  instance_type        = "${var.instance_type}"
-  security_groups      = "${module.security_groups.internal_ssh}"
+  security_groups      = "${module.security_groups.internal_ssh},${module.security_groups.cluster}"
   vpc_id               = "${module.vpc.id}"
   subnet_id            = "${element(split(",",module.vpc.internal_subnets), 0)}"
   key_name             = "${var.key_name}"
@@ -144,34 +156,38 @@ module "mgmtnode" {
 }
 
 module "consul_servers" {
-  source               = "./consul-servers"
-  region               = "${var.region}"
-  launch_ami           = "${var.docker_host_ami}"
-  instance_iam_profile = "${module.iam_roles.docker_host_profile_name}"
-  instance_type        = "${var.instance_type}"
-  security_groups      = "${module.mgmtnode.mgmt_security_group}"
-  vpc_id               = "${module.vpc.id}"
-  availability_zones   = "${module.vpc.availability_zones}"
-  subnet_ids           = "${module.vpc.internal_subnets}"
-  key_name             = "${var.key_name}"
-  environment          = "${var.environment}"
-  vpc_cidr             = "${var.cidr}"
+  source                 = "./consul-servers"
+  instance_type          = "${var.instance_type}"
+  region                 = "${var.region}"
+  security_groups        = "${module.security_groups.cluster},${module.mgmtnode.mgmt_security_group}"
+  vpc_id                 = "${module.vpc.id}"
+  vpc_cidr               = "${var.cidr}"
+  key_name               = "${var.key_name}"
+  availability_zones     = "${module.vpc.availability_zones}"
+  subnet_ids             = "${module.vpc.internal_subnets}"
+  instance_iam_profile   = "${module.iam_roles.docker_host_profile_name}"
+  environment            = "${var.environment}"
+  mgmt_security_group    = "${module.mgmtnode.mgmt_security_group}"
+  cluster_security_group = "${module.security_groups.cluster}"
+  launch_ami             = "${var.docker_host_ami}"
 }
 
 module "nomad_resource_nodes" {
-  source               = "./nomad-resource-nodes"
-  name                 = "${var.name}"
-  instance_type        = "${var.instance_type}"
-  region               = "${var.region}"
-  security_groups      = "${module.security_groups.internal_ssh}"
-  vpc_id               = "${module.vpc.id}"
-  vpc_cidr             = "${var.cidr}"
-  key_name             = "${var.key_name}"
-  availability_zones   = "${module.vpc.availability_zones}"
-  subnet_ids           = "${module.vpc.internal_subnets}"
-  elb_subnet_ids       = "${module.vpc.external_subnets}"
-  environment          = "${var.environment}"
-  instance_iam_profile = "${module.iam_roles.docker_host_profile_name}"
-  launch_ami           = "${var.docker_host_ami}"
+  source                 = "./nomad-resource-nodes"
+  name                   = "${var.name}"
+  instance_type          = "${var.instance_type}"
+  region                 = "${var.region}"
+  vpc_id                 = "${module.vpc.id}"
+  vpc_cidr               = "${var.cidr}"
+  key_name               = "${var.key_name}"
+  availability_zones     = "${module.vpc.availability_zones}"
+  subnet_ids             = "${module.vpc.internal_subnets}"
+  elb_subnet_ids         = "${module.vpc.external_subnets}"
+  environment            = "${var.environment}"
+  instance_iam_profile   = "${module.iam_roles.docker_host_profile_name}"
+  mgmt_security_group    = "${module.mgmtnode.mgmt_security_group}"
+  elb_security_group     = "${module.security_groups.external_elb}"
+  cluster_security_group = "${module.security_groups.cluster}"
+  launch_ami             = "${var.docker_host_ami}"
 }
 

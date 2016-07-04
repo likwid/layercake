@@ -6,9 +6,9 @@
  *
  *    module "mgmtnode" {
  *      source               = "github.com/likwid/layercake/mgmtnode"
+ *      instance_type        = "t2.micro"
  *      region               = "us-west-2"
  *      instance_iam_profile = ""
- *      instance_type        = "t2.micro"
  *      security_groups      = "sg-1,sg-2"
  *      vpc_id               = "vpc-12"
  *      key_name             = "ssh-key"
@@ -73,6 +73,13 @@ resource "aws_security_group" "mgmt_node" {
     to_port         = 0
     protocol        = -1
     security_groups = ["${split(",", var.security_groups)}"]
+  }
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = -1
+    self      = true
   }
 
   egress {

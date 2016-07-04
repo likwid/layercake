@@ -141,6 +141,41 @@ resource "aws_security_group" "internal_ssh" {
   }
 }
 
+resource "aws_security_group" "cluster" {
+  name        = "cluster-sg"
+  vpc_id      = "${var.vpc_id}"
+  description = "Allows traffic for cluster communication"
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = -1
+    security_groups = ["${aws_security_group.external_elb.id}"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Environment = "${var.environment}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 // External SSH allows ssh connections on port 22 from the world.
 output "external_ssh" {
   value = "${aws_security_group.external_ssh.id}"
@@ -159,4 +194,9 @@ output "internal_elb" {
 // External ELB allows traffic from the world.
 output "external_elb" {
   value = "${aws_security_group.external_elb.id}"
+}
+
+// Cluster communication
+output "cluster" {
+  value = "${aws_security_group.cluster.id}"
 }

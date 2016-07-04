@@ -7,13 +7,15 @@
  * Usage:
  *
  *    module "bastion" {
- *      source            = "github.com/likwid/layercake/bastion"
- *      region            = "us-west-2"
- *      security_groups   = "sg-1,sg-2"
- *      vpc_id            = "vpc-12"
- *      key_name          = "ssh-key"
- *      subnet_id         = "pub-1"
- *      environment       = "prod"
+ *      source               = "github.com/likwid/layercake/bastion"
+ *      instance_type        = "t2.micro"
+ *      region               = "us-west-2"
+ *      security_groups      = "sg-1,sg-2"
+ *      vpc_id               = "vpc-12"
+ *      key_name             = "ssh-key"
+ *      subnet_id            = "pub-1"
+ *      environment          = "prod"
+ *      instance_iam_profile = "iam-profile"
  *    }
  *
  */
