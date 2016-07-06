@@ -78,23 +78,22 @@ variable "resource_node_security_groups" {
   default     = ""
 }
 
+// This is necessary because terraform would delete the s3 bucket otherwise, including all our data
+variable "docker_registry_s3_arn" {
+  description = "S3 arn of bucket where docker registry data should be stored"
+}
+
 module "defaults" {
   source = "./defaults"
   region = "${var.region}"
   cidr   = "${var.cidr}"
 }
 
-module "docker_registry_s3" {
-  source      = "./docker-registry-s3"
-  name        = "${var.name}"
-  environment = "${var.environment}"
-}
-
 module "iam_roles" {
   source              = "./iam-roles"
   name                = "${var.name}"
   environment         = "${var.environment}"
-  docker_registry_arn = "${module.docker_registry_s3.arn}"
+  docker_registry_arn = "${var.docker_registry_s3_arn}"
 }
 
 module "vpc" {

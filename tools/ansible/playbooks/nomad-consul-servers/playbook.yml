@@ -4,3 +4,4 @@
   roles:
   - consul-server
   - nomad-server
+  - docker-registry

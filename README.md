@@ -17,7 +17,7 @@ make install
 AMI Baking assumes you have an existing vpc, subnet that you can spin up a Packer Builder instance. This can be a default vpc, and public subnet.
 
 ```
-# VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
+# AWS_REGION=us-east-1 VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
 ```
 
 #### Orchestration
@@ -31,11 +31,13 @@ variable "region" {
 }
 
 module "layercake" {
-    source      = "github.com/likwid/layercake"
-    name        = "layercake-example"
-    environment = "sandbox"
-    region      = "${var.region}"
-    key_name    = "sumnurv"
+    source                 = "github.com/likwid/layercake"
+    name                   = "layercake-example"
+    environment            = "sandbox"
+    region                 = "${var.region}"
+    key_name               = "sumnurv"
+    docker_host_ami        = "ami-123456"
+    docker_registry_s3_arn = "arn:aws:s3:::bucket_name"
 }
 
 provider "aws" {
@@ -56,11 +58,13 @@ Note: If you experience errors while executing terraform apply, just apply again
 
 #### Provisioning
 
+You will want to create a bucket for private docker registry storage
+
 ```
 # ssh ubuntu@bastion_external_ip -oForwardAgent=yes
 # ssh management.lc.io -oForwardAgent=yes
 # git clone git@github.com:likwid/layercake
 # cd layercake/tools/ansible
-# ansible-playbook playbooks/nomad-consul-servers/playbook.yml
-# ansible-playbook playbooks/nomad-consul-agents/playbook.yml
+# ansible-playbook playbooks/nomad-consul-servers/playbook.yml -e "s3_bucket=blah"
+# ansible-playbook playbooks/nomad-consul-agents/playbook.yml -e "s3_bucket=blah"
 ```

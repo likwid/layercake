@@ -10,3 +10,41 @@
   roles:
   - consul-agent
   - nomad-agent
+  - docker-registry
+
+- hosts: tag_Role_management
+  gather_facts: yes
+  vars:
+    registry_bucket: nomad-consul-registry-playground
+  tasks:
+  - block:
+
+  - name: Install s3cmd
+    pip:
+      name: s3cmd
+
+    - name: Ensure /srv/jenkins exists
+      file:
+        path: /srv/jenkins
+        mode: 0755
+        owner: ubuntu
+        group: ubuntu
+        state: directory
+
+    - name: Create jenkins-data container
+      command: >
+        docker create --name jenkins-data
+        -v /srv/jenkins:/var/lib/jenkins
+        localhost:5000/jenkins
+
+    - name: Download the jenkins-data backup from S3
+      command: >
+        s3cmd s3://{{ registry_bucket }}/jenkins-backup.tar /home/ubuntu/backup.tar
+    
+    - name: Unarchive the jenkins-data backup into the jenkins-data container
+      command: >
+        docker run --rm --volumes-from jenkins-data
+        -v /home/ubuntu:/backup ubuntu bash 
+        -c "cd /var/lib/jenkins/ && tar xvf /backup/backup.tar --strip 1"
+
+  become: yes
