@@ -17,8 +17,20 @@
       owner: root
       group: root
 
-  - name: Start docker registry
-    command: >
-      docker run -d --name registry -p 5000:5000
-      -v /srv/docker-registry/config.yml:/etc/docker/registry/config.yml
-      --restart=always registry:2
+  become: yes
+
+- name: Check for docker registry
+  command: docker inspect registry
+  ignore_errors: yes
+  register: registry_exists
+
+- name: Start docker registry
+  command: >
+    docker run -d --name registry -p 5000:5000
+    -v /srv/docker-registry/config.yml:/etc/docker/registry/config.yml
+    --restart=always registry:2
+  when: registry_exists.rc != 0
+
+- name: Restart docker registry
+  command: docker restart registry
+  when: registry_exists.rc == 0
