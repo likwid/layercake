@@ -1,6 +1,7 @@
 FROM nginx:1.9.14
-MAINTAINER Jeff Gonzalez <likwid at gmail>
+MAINTAINER Jeff Gonzalez <likwid @ gmail>
 
+ENV ENV_ID "prod"
 EXPOSE 1025
 
 RUN DEBIAN_FRONTEND=noninteractive \

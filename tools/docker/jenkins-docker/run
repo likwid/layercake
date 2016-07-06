@@ -1,0 +1,89 @@
+#!/bin/bash
+set -e
+
+PLUGINS_ENDPOINT=http://archives.jenkins-ci.org/plugins/
+DATA=/var/lib/jenkins
+
+mkdir -p $DATA/plugins
+
+PLUGINS=$(cat <<-EOF
+blueocean
+blueocean-events
+blueocean-commons
+blueocean-dashboard
+blueocean-rest
+blueocean-rest-impl
+blueocean-web
+cloudbees-folder
+junit
+antisamy-markup-formatter
+permissive-script-security
+pam-auth
+script-security
+matrix-project
+mailer
+ldap
+icon-shim
+matrix-auth
+token-macro
+external-monitor-job
+build-timeout
+credentials
+plain-credentials
+structs
+workflow-step-api
+credentials-binding
+timestamper
+ws-cleanup
+ant
+gradle
+workflow-scm-step
+scm-api
+workflow-api
+jquery-detached
+workflow-support
+ace-editor
+workflow-cps
+ssh-credentials
+git-client
+workflow-cps-global-lib
+pipeline-build-step
+workflow-job
+pipeline-rest-api
+handlebars
+momentjs
+pipeline-stage-view
+pipeline-input-step
+durable-task
+workflow-durable-task-step
+workflow-basic-steps
+pipeline-stage-step
+branch-api
+workflow-multibranch
+workflow-aggregator
+docker-traceability
+docker-workflow
+github-api
+git
+github
+github-branch-source
+github-organization-folder
+mapdb-api
+subversion
+ssh-slaves
+slack
+ec2
+job-dsl
+pipeline-utility-steps
+EOF
+)
+
+for plugin in $PLUGINS; do
+  if [[ ! -e "$DATA/plugins/$plugin" ]]; then
+    cd $DATA/plugins && wget --no-check-certificate $PLUGINS_ENDPOINT/${plugin}/latest/${plugin}.hpi
+  fi
+done
+
+chown -R jenkins $DATA
+
+exec su jenkins -c "java -jar /usr/share/jenkins/jenkins.war"
