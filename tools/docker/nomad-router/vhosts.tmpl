@@ -1,0 +1,27 @@
+{{ $environment := env "ENV_ID" -}}
+{{- range services -}}
+{{- if .Tags | contains "web" -}}
+
+{{- $appKey := printf "%s/services/%s" $environment .Name -}}
+{{- $app := key $appKey -}}
+
+{{- $domainKey := printf "%s/apps/%s/domain" $environment $app -}}
+{{- $domain := key_or_default $domainKey "localhost" -}}
+
+{{- $colorKey := printf "%s/apps/%s/deploy/current" $environment $app -}}
+{{- $color := key $colorKey }}
+
+{{- if .Tags | contains $color -}}
+
+server {
+  listen 80;
+  server_name {{ $domain }};
+
+  location / {
+    proxy_pass http://{{ $app }}-{{ $color }};
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+{{ end }}{{ end }}{{ end }}

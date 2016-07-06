@@ -12,9 +12,9 @@ install-third-party-tools:
 endif
 
 validate-trusty:
-	@yaml json write packer/base/trusty.yml | packer validate -
+	@yaml json write tools/packer/base/trusty.yml | packer validate -
 
 build-trusty: validate-trusty
-	@yaml json write packer/base/trusty.yml | packer build -
+	@yaml json write tools/packer/base/trusty.yml | packer build -
 
 .PHONY: install-third-party-tools build-trusty validate-trusty

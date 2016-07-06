@@ -116,7 +116,7 @@ resource "aws_autoscaling_group" "consul" {
 
   tag {
     key                 = "Name"
-    value               = "consul"
+    value               = "consul-server"
     propagate_at_launch = true
   }
   tag {

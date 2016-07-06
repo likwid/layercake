@@ -41,11 +41,11 @@ builders:
 provisioners:
 - type: shell
   scripts:
-  - packer/scripts/base.sh
-  - packer/scripts/trusty.sh
+  - tools/packer/scripts/base.sh
+  - tools/packer/scripts/trusty.sh
   execute_command: "echo '' | sudo -S sh '{{.Path}}'"
 - type: ansible-local
-  playbook_file: ansible/playbooks/packer-trusty-docker/playbook.yml
-  playbook_dir: ansible
+  playbook_file: tools/ansible/playbooks/packer-trusty-docker/playbook.yml
+  playbook_dir: tools/ansible
   extra_arguments:
   - "-u ubuntu"

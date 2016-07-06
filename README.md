@@ -60,7 +60,7 @@ Note: If you experience errors while executing terraform apply, just apply again
 # ssh ubuntu@bastion_external_ip -oForwardAgent=yes
 # ssh management.lc.io -oForwardAgent=yes
 # git clone git@github.com:likwid/layercake
-# cd layercake/ansible
+# cd layercake/tools/ansible
 # ansible-playbook playbooks/nomad-consul-servers/playbook.yml
 # ansible-playbook playbooks/nomad-consul-agents/playbook.yml
 ```
