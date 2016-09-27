@@ -14,10 +14,11 @@ make install
 
 #### Baking
 
-AMI Baking assumes you have an existing vpc, subnet that you can spin up a Packer Builder instance. This can be a default vpc, and public subnet.
+AMI Baking assumes you have an existing vpc & subnet that you can spin up a Packer Builder instance. This can be a default vpc and public subnet.
+You will also need to find an Ubuntu 14.04 Trusty AMI to use for this example.
 
 ```
-# AWS_REGION=us-east-1 VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
+# TRUST_AMI_ID=ami-12345 AWS_REGION=us-east-1 VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
 ```
 
 #### Orchestration

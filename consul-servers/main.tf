@@ -95,7 +95,7 @@ resource "aws_launch_configuration" "consul" {
   name_prefix          = "consul-"
   image_id             = "${var.launch_ami}"
   instance_type        = "${var.instance_type}"
-  iam_instance_profile = "${var.instance_iam_profile.name}"
+  iam_instance_profile = "${var.instance_iam_profile}"
   key_name             = "${var.key_name}"
   security_groups      = ["${var.mgmt_security_group}", "${var.cluster_security_group}"]
   

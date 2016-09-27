@@ -18,50 +18,50 @@
     registry_bucket: nomad-consul-registry-playground
   tasks:
 
-  - block:
+  # - block:
 
-    - name: Ensure /srv/jenkins exists
-      file:
-        path: /srv/jenkins
-        mode: 0755
-        owner: ubuntu
-        group: ubuntu
-        state: directory
+  #   - name: Ensure /srv/jenkins exists
+  #     file:
+  #       path: /srv/jenkins
+  #       mode: 0755
+  #       owner: ubuntu
+  #       group: ubuntu
+  #       state: directory
 
-    - name: Check for jenkins-data container
-      command: docker inspect jenkins-data
-      ignore_errors: yes
-      register: jenkins_data_exists
+  #   - name: Check for jenkins-data container
+  #     command: docker inspect jenkins-data
+  #     ignore_errors: yes
+  #     register: jenkins_data_exists
 
-    - name: Create jenkins-data container
-      command: >
-        docker create --name jenkins-data
-        -v /srv/jenkins:/var/lib/jenkins
-        localhost:5000/jenkins
-      when: jenkins_data_exists.rc != 0
+  #   - name: Create jenkins-data container
+  #     command: >
+  #       docker create --name jenkins-data
+  #       -v /srv/jenkins:/var/lib/jenkins
+  #       localhost:5000/jenkins
+  #     when: jenkins_data_exists.rc != 0
 
-    - name: Download the jenkins-data backup from S3
-      command: >
-        aws s3 cp s3://{{ registry_bucket }}/jenkins-backup.tar /home/ubuntu/backup.tar
-      when: jenkins_data_exists.rc != 0
+  #   - name: Download the jenkins-data backup from S3
+  #     command: >
+  #       aws s3 cp s3://{{ registry_bucket }}/jenkins-backup.tar /home/ubuntu/backup.tar
+  #     when: jenkins_data_exists.rc != 0
     
-    - name: Unarchive the jenkins-data backup into the jenkins-data container
-      command: >
-        docker run --rm --volumes-from jenkins-data
-        -v /home/ubuntu/backup.tar:/backup/backup.tar ubuntu bash 
-        -c "cd /var/lib/jenkins/ && tar xvf /backup/backup.tar --strip 3"
-      when: jenkins_data_exists.rc != 0
+  #   - name: Unarchive the jenkins-data backup into the jenkins-data container
+  #     command: >
+  #       docker run --rm --volumes-from jenkins-data
+  #       -v /home/ubuntu/backup.tar:/backup/backup.tar ubuntu bash 
+  #       -c "cd /var/lib/jenkins/ && tar xvf /backup/backup.tar --strip 3"
+  #     when: jenkins_data_exists.rc != 0
 
-    - name: Check for jenkins container
-      command: docker inspect jenkins-master
-      ignore_errors: yes
-      register: jenkins_master_exists
+  #   - name: Check for jenkins container
+  #     command: docker inspect jenkins-master
+  #     ignore_errors: yes
+  #     register: jenkins_master_exists
 
-    - name: Run jenkins container
-      command: >
-        docker run -d --volumes-from jenkins-data
-        -p 8080:8080 --restart always --name jenkins-master
-        localhost:5000/jenkins
-      when: jenkins_master_exists.rc != 0
+  #   - name: Run jenkins container
+  #     command: >
+  #       docker run -d --volumes-from jenkins-data
+  #       -p 8080:8080 --restart always --name jenkins-master
+  #       localhost:5000/jenkins
+  #     when: jenkins_master_exists.rc != 0
 
-  become: yes
+  # become: yes

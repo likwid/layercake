@@ -157,7 +157,7 @@ output "internal_subnets" {
 }
 
 // The default VPC security group ID.
-output "security_group" {
+output "default_security_group_id" {
   value = "${aws_vpc.main.default_security_group_id}"
 }
 

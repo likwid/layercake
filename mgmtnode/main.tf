@@ -101,7 +101,7 @@ resource "aws_security_group" "mgmt_node" {
 resource "aws_instance" "mgmtnode" {
   ami                    = "${var.launch_ami}"
   source_dest_check      = false
-  iam_instance_profile   = "${var.instance_iam_profile.name}"
+  iam_instance_profile   = "${var.instance_iam_profile}"
   instance_type          = "${var.instance_type}"
   subnet_id              = "${var.subnet_id}"
   key_name               = "${var.key_name}"

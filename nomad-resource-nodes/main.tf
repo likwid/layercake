@@ -105,7 +105,7 @@ resource "aws_launch_configuration" "nomad" {
   name_prefix          = "nomad"
   image_id             = "${var.launch_ami}"
   instance_type        = "${var.instance_type}"
-  iam_instance_profile = "${var.instance_iam_profile.name}"
+  iam_instance_profile = "${var.instance_iam_profile}"
   key_name             = "${var.key_name}"
   security_groups      = ["${var.mgmt_security_group}","${var.cluster_security_group}"]
   
@@ -123,6 +123,7 @@ resource "aws_autoscaling_group" "resource_nodes" {
   max_size             = "${var.max_size}"
   desired_capacity     = "${var.desired_capacity}"
   termination_policies = ["OldestLaunchConfiguration", "Default"]
+  load_balancers       = ["${aws_elb.public.name}"]
 
   tag {
     key                 = "Name"

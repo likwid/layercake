@@ -1,0 +1,6 @@
+---
+- name: reload nomad
+  service:
+    name: nomad
+    state: reloaded
+  become: yes
