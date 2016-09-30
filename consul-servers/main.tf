@@ -23,6 +23,10 @@
  *
  */
 
+variable "name" {
+  description = "Name of infrastructure"
+}
+
 variable "instance_type" {
   default     = "t2.micro"
   description = "Instance type, see a list at: https://aws.amazon.com/ec2/instance-types/"
@@ -54,6 +58,10 @@ variable "availability_zones" {
 
 variable "subnet_ids" {
   description = "Comma separated list of subnet IDs"
+}
+
+variable "elb_subnet_ids" {
+  description = "Comma separated list of subnets for the ELB"
 }
 
 variable "environment" {
@@ -91,6 +99,14 @@ variable "desired_capacity" {
   default     = 3
 }
 
+variable "internal_dns_zone_id" {
+  description = "DNS zone to use"
+}
+
+variable "internal_dns_name" {
+  description = "DNS name, like layercake.local"
+}
+
 resource "aws_launch_configuration" "consul" {
   name_prefix          = "consul-"
   image_id             = "${var.launch_ami}"
@@ -113,6 +129,7 @@ resource "aws_autoscaling_group" "consul" {
   max_size             = "${var.max_size}"
   desired_capacity     = "${var.desired_capacity}"
   termination_policies = ["OldestLaunchConfiguration", "Default"]
+  load_balancers       = ["${aws_elb.private.name}"]
 
   tag {
     key                 = "Name"
@@ -129,4 +146,35 @@ resource "aws_autoscaling_group" "consul" {
     value               = "${var.environment}"
     propagate_at_launch = true
   }
+}
+
+resource "aws_elb" "private" {
+  name = "${var.name}-${var.environment}-private-elb"
+  subnets = ["${split(",", var.elb_subnet_ids)}"]
+  cross_zone_load_balancing = true
+  internal = true
+  security_groups = ["${var.cluster_security_group}"]
+
+  listener { 
+    instance_port = 8500
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  health_check {
+    target = "HTTP:8500/ui/"
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    interval = 30
+    timeout = 3
+  }
+}
+
+resource "aws_route53_record" "consul" {
+  zone_id = "${var.internal_dns_zone_id}"
+  name    = "consul.${var.internal_dns_name}"
+  type    = "CNAME"
+  ttl     = 60
+  records = ["${aws_elb.private.dns_name}"]
 }

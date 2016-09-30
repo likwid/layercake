@@ -26,7 +26,7 @@ variable "key_name" {
 
 variable "domain_name" {
   description = "the internal DNS name to use with services"
-  default     = "lc.io"
+  default     = "nventio.int"
 }
 
 variable "domain_name_servers" {
@@ -82,6 +82,11 @@ variable "resource_node_security_groups" {
 variable "docker_registry_s3_arn" {
   description = "S3 arn of bucket where docker registry data should be stored"
 }
+
+variable public_dns_zone_id {
+  description = "DNS zone for public facing entries"
+}
+
 
 module "defaults" {
   source = "./defaults"
@@ -156,6 +161,7 @@ module "mgmtnode" {
 
 module "consul_servers" {
   source                 = "./consul-servers"
+  name                   = "${var.name}"
   instance_type          = "${var.instance_type}"
   region                 = "${var.region}"
   security_groups        = "${module.security_groups.cluster},${module.mgmtnode.mgmt_security_group}"
@@ -164,11 +170,14 @@ module "consul_servers" {
   key_name               = "${var.key_name}"
   availability_zones     = "${module.vpc.availability_zones}"
   subnet_ids             = "${module.vpc.internal_subnets}"
+  elb_subnet_ids         = "${module.vpc.internal_subnets}"
   instance_iam_profile   = "${module.iam_roles.docker_host_profile_name}"
   environment            = "${var.environment}"
   mgmt_security_group    = "${module.mgmtnode.mgmt_security_group}"
   cluster_security_group = "${module.security_groups.cluster}"
   launch_ami             = "${var.docker_host_ami}"
+  internal_dns_zone_id = "${module.dns.zone_id}"
+  internal_dns_name    = "${module.dns.name}"
 }
 
 module "nomad_resource_nodes" {
@@ -190,3 +199,4 @@ module "nomad_resource_nodes" {
   launch_ami             = "${var.docker_host_ami}"
 }
 
+  

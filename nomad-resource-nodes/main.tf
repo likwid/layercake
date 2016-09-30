@@ -115,7 +115,7 @@ resource "aws_launch_configuration" "nomad" {
 }
 
 resource "aws_autoscaling_group" "resource_nodes" {
-  name = "nomad-resource-nodes"
+  name = "${var.name}-${var.environment}-resources"
   availability_zones   = ["${split(",", var.availability_zones)}"]
   vpc_zone_identifier  = ["${split(",", var.subnet_ids)}"]
   launch_configuration = "${aws_launch_configuration.nomad.id}"
@@ -143,7 +143,7 @@ resource "aws_autoscaling_group" "resource_nodes" {
 }
 
 resource "aws_elb" "public" {
-  name = "${var.name}-public-elb"
+  name = "${var.name}-${var.environment}-public-elb"
   subnets = ["${split(",", var.elb_subnet_ids)}"]
   cross_zone_load_balancing = true
 

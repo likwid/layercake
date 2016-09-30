@@ -17,4 +17,7 @@ validate-trusty:
 build-trusty: validate-trusty
 	@yaml json write tools/packer/base/trusty.yml | packer build -
 
-.PHONY: install-third-party-tools build-trusty validate-trusty
+test:
+	@bash scripts/test.sh
+
+.PHONY: install-third-party-tools build-trusty validate-trusty test

@@ -64,27 +64,23 @@ module "ami" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                    = "${module.ami.ami_id}"
-  source_dest_check      = false
-  iam_instance_profile   = "${var.instance_iam_profile}"
-  instance_type          = "${var.instance_type}"
-  subnet_id              = "${var.subnet_id}"
-  key_name               = "${var.key_name}"
-  vpc_security_group_ids = ["${split(",",var.security_groups)}"]
-  monitoring             = true
-  user_data              = "${file(format("%s/user_data.sh", path.module))}"
+  ami                         = "${module.ami.ami_id}"
+  associate_public_ip_address = true
+  source_dest_check           = false
+  iam_instance_profile        = "${var.instance_iam_profile}"
+  instance_type               = "${var.instance_type}"
+  subnet_id                   = "${var.subnet_id}"
+  key_name                    = "${var.key_name}"
+  vpc_security_group_ids      = ["${split(",",var.security_groups)}"]
+  monitoring                  = true
+  user_data                   = "${file(format("%s/user_data.sh", path.module))}"
   tags {
     Name        = "bastion"
     Environment = "${var.environment}"
   }
 }
 
-resource "aws_eip" "bastion" {
-  instance = "${aws_instance.bastion.id}"
-  vpc      = true
-}
-
 // Bastion external IP address.
 output "external_ip" {
-  value = "${aws_eip.bastion.public_ip}"
+  value = "${aws_instance.bastion.public_ip}"
 }
