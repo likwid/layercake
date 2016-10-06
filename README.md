@@ -18,7 +18,7 @@ AMI Baking assumes you have an existing vpc & subnet that you can spin up a Pack
 You will also need to find an Ubuntu 14.04 Trusty AMI to use for this example.
 
 ```
-# TRUST_AMI_ID=ami-12345 AWS_REGION=us-east-1 VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
+# TRUSTY_AMI_ID=ami-12345 AWS_REGION=us-east-1 VPC_ID=vpc-123456 SUBNET_ID=subnet-123456 make build-trusty
 ```
 
 #### Orchestration
