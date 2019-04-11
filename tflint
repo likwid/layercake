@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+main() {
+  find . -type f -name "*.tf" \
+  | xargs -I {} terraform fmt {}
+}
+
+main
